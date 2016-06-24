@@ -1,0 +1,30 @@
+{
+  "name": "page-metadata-service",
+  "version": "0.1.0",
+  "description": "A RESTful microservice for generating preview summaries of web pages.",
+  "main": "service.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mozilla/page-metadata-service.git"
+  },
+  "keywords": [
+    "page",
+    "summary",
+    "metadata",
+    "rest",
+    "service",
+    "api"
+  ],
+  "author": "Jared Kerim",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/mozilla/page-metadata-service/issues"
+  },
+  "homepage": "https://github.com/mozilla/page-metadata-service#readme",
+  "dependencies": {
+    "page-metadata-parser": "^0.1.0"
+  }
+}
