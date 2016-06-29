@@ -14,7 +14,7 @@ function buildObj(pairs) {
 
 
 function getDocumentMetadata(url, doc) {
-  let metadata = getMetadata(doc);
+  const metadata = getMetadata(doc);
 
   metadata.url = url;
   metadata.original_url = url;
@@ -22,7 +22,7 @@ function getDocumentMetadata(url, doc) {
 
   if (!metadata.favicon_url) {
     const parsedUrl = urlparse.parse(url);
-    metadata.favicon_url = parsedUrl.protocol + '//' + parsedUrl.host + '/favicon.ico';
+    metadata.favicon_url = `${parsedUrl.protocol}//${parsedUrl.host}/favicon.ico`;
   }
 
   metadata.image = metadata.image && metadata.image.replace(/^\/\//, 'https://');
@@ -34,7 +34,7 @@ function getDocumentMetadata(url, doc) {
 function getUrlMetadata(url) {
   return new Promise((resolve, reject) => {
     jsdom.env({
-      url: url,
+      url,
       done: function(err, window) {
         if (!window) {
           resolve({});
