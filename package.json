@@ -4,6 +4,7 @@
   "description": "A RESTful microservice for generating preview summaries of web pages.",
   "main": "service.js",
   "scripts": {
+    "start": "node service",
     "test:lint": "eslint .",
     "test": "test"
   },
@@ -26,14 +27,13 @@
   },
   "homepage": "https://github.com/mozilla/page-metadata-service#readme",
   "dependencies": {
-    "body-parser": "^1.15.2",
-    "express": "^4.14.0",
+    "hapi": "^13.4.1",
+    "joi": "^8.4.2",
     "jsdom": "^9.2.1",
-    "page-metadata-parser": "^0.1.0",
-    "urlparse": "0.0.1"
+    "page-metadata-parser": "^0.1.0"
   },
   "devDependencies": {
     "eslint": "^2.13.1",
-    "eslint-plugin-mozilla": "0.0.3"
+    "eslint-plugin-mozilla": "^0.0.3"
   }
 }

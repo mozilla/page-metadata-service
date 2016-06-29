@@ -1,7 +1,7 @@
-const bodyParser = require('body-parser');
-const express = require('express');
+const {parse} = require('url');
+const Hapi = require('hapi');
+const Joi = require('joi');
 const jsdom = require('jsdom');
-const urlparse = require('url');
 const {getMetadata} = require('page-metadata-parser');
 
 
@@ -21,8 +21,8 @@ function getDocumentMetadata(url, doc) {
   metadata.provider_url = url;
 
   if (!metadata.favicon_url) {
-    const parsedUrl = urlparse.parse(url);
-    metadata.favicon_url = parsedUrl.protocol + '//' + parsedUrl.host + '/favicon.ico';
+    const parsedUrl = parse(url);
+    metadata.favicon_url = `${parsedUrl.protocol}//${parsedUrl.host}/favicon.ico`;
   }
 
   metadata.image = metadata.image && metadata.image.replace(/^\/\//, 'https://');
@@ -48,21 +48,38 @@ function getUrlMetadata(url) {
 }
 
 
-const app = express();
-app.use(bodyParser.json()); // for parsing application/json
-
-app.post('/', function(req, res) {
-  const promises = req.body.urls.map((url) => {
-    return getUrlMetadata(url);
-  });
-
-  Promise.all(promises).then((urlsData) => {
-    res.json({
-      error: '',
-      urls: buildObj(urlsData.map((urlData) => [urlData.url, urlData]))
-    });
-  });
+const server = new Hapi.Server();
+server.connection({
+  port: 7001
 });
 
-app.listen(7001, function() {
+server.route({
+  method: 'POST',
+  path: '/',
+  config: {
+    validate: {
+      payload: {
+        urls: Joi.array().required()
+      }
+    }
+  },
+  handler: (req, reply) => {
+    const promises = req.payload.urls.map((url) => getUrlMetadata(url));
+
+    Promise.all(promises)
+      .then((urlsData) => {
+        return reply({
+          error: '',
+          urls: buildObj(urlsData.map((urlData) => [urlData.url, urlData]))
+        });
+      });
+  }
+});
+
+server.start((err) => {
+  if (err) {
+    throw err;
+  }
+
+  console.log('Server running at: %s', server.info.uri); // eslint-disable-line no-console
 });
