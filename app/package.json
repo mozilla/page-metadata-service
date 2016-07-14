@@ -27,9 +27,10 @@
   "homepage": "https://github.com/mozilla/page-metadata-service#readme",
   "dependencies": {
     "body-parser": "^1.15.2",
+    "domino": "^1.0.25",
     "express": "^4.14.0",
-    "jsdom": "^9.2.1",
-    "page-metadata-parser": "^0.1.0",
+    "node-fetch": "^1.5.3",
+    "page-metadata-parser": "^0.2.1",
     "urlparse": "0.0.1"
   },
   "devDependencies": {

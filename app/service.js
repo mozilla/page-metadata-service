@@ -1,6 +1,7 @@
 const bodyParser = require('body-parser');
 const express = require('express');
-const jsdom = require('jsdom');
+const domino = require('domino');
+const fetch = require('node-fetch');
 const urlparse = require('url');
 const {getMetadata} = require('page-metadata-parser');
 
@@ -13,8 +14,9 @@ function buildObj(pairs) {
 }
 
 
-function getDocumentMetadata(url, doc) {
-  let metadata = getMetadata(doc);
+function getDocumentMetadata(url, window) {
+  const doc = window.document;
+  const metadata = getMetadata(doc);
 
   metadata.url = url;
   metadata.original_url = url;
@@ -33,16 +35,13 @@ function getDocumentMetadata(url, doc) {
 
 function getUrlMetadata(url) {
   return new Promise((resolve, reject) => {
-    jsdom.env({
-      url: url,
-      done: function(err, window) {
-        if (!window) {
-          resolve({});
-          return;
-        }
-
-        resolve(getDocumentMetadata(url, window.document));
-      }
+    fetch(url).then((res) => {
+      return res.text();
+    }).then((body) => {
+      const window = domino.createWindow(body);
+      resolve(getDocumentMetadata(url, window));
+    }).catch((err) => {
+      resolve({});
     });
   });
 }
@@ -52,15 +51,28 @@ const app = express();
 app.use(bodyParser.json()); // for parsing application/json
 
 app.post('/', function(req, res) {
+  const response = {
+    error: '',
+    urls: [],
+  }
+
+  function fail(reason) {
+    response.error = reason;
+    res.json(response);
+  }
+
+  if(!req.body.urls) {
+    fail('Unable to locate `urls` in body: ' + JSON.stringify(req.body));
+    return;
+  }
+
   const promises = req.body.urls.map((url) => {
     return getUrlMetadata(url);
   });
 
   Promise.all(promises).then((urlsData) => {
-    res.json({
-      error: '',
-      urls: buildObj(urlsData.map((urlData) => [urlData.url, urlData]))
-    });
+    response.urls = buildObj(urlsData.map((urlData) => [urlData.url, urlData]));
+    res.json(response);
   });
 });
 

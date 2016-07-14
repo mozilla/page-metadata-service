@@ -2,7 +2,7 @@ app:
   build: ./app
   expose:
     - "7001"
-  restart: never
+  restart: always
   command: node service.js 
 
 nginx:
@@ -11,4 +11,4 @@ nginx:
     - app
   ports:
     - "80:80"
-  restart: never 
+  restart: always
