@@ -1,0 +1,14 @@
+app:
+  build: ./app
+  expose:
+    - "7001"
+  restart: never
+  command: node service.js 
+
+nginx:
+  build: ./nginx
+  links:
+    - app
+  ports:
+    - "80:80"
+  restart: never 
