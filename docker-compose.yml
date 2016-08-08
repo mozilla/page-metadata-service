@@ -1,5 +1,7 @@
 app:
   build: ./app
+  tty: true
+  stdin_open: true
   expose:
     - "7001"
   restart: always

@@ -27,7 +27,15 @@ function getDocumentMetadata(url, window) {
     metadata.favicon_url = parsedUrl.protocol + '//' + parsedUrl.host + '/favicon.ico';
   }
 
-  metadata.image = metadata.image && metadata.image.replace(/^\/\//, 'https://');
+  metadata.image_url = metadata.image_url && metadata.image_url.replace(/^\/\//, 'https://');
+  metadata.images = [{
+    'url': metadata.image_url,
+    'width': 500,
+    'height': 500,
+    'entropy': 1.0
+  }];
+
+  console.log('Generated Metadata for ' + url + ':\n' + JSON.stringify(metadata));
 
   return metadata;
 }
