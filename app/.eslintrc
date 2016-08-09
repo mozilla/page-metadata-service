@@ -1,32 +1,17 @@
 {
-  // When adding items to this file please check for effects on sub-directories.
-  "parserOptions": {
-    "ecmaFeatures": {
-      "jsx": true
-    }
-  },
   "env": {
-    "browser": true,
     "es6": true,
-    "mocha": true,
     "node": true,
   },
-  "globals": {
-    "StopIteration": true,
-    "__CONFIG__": true,
-    "platform_exports": true,
-    "platform_require": true
-  },
   "plugins": [
-    "mozilla",
+    "node",
   ],
   "extends": [
-    "eslint:recommended"
+    "eslint:recommended",
+    "plugin:node/recommended"
   ],
   "rules": {
-    "mozilla/components-imports": 1,
-    "mozilla/import-globals-from": 1,
-    "mozilla/this-top-level-scope": 1,
+    "node/no-unsupported-features": [2, {"version": 6}],
 
     "array-bracket-spacing": [2, "never"],
     "camelcase": 0,

@@ -1,16 +1,27 @@
 {
   "name": "page-metadata-service",
-  "version": "0.1.0",
   "description": "A RESTful microservice for generating preview summaries of web pages.",
-  "main": "service.js",
-  "scripts": {
-    "test:lint": "eslint .",
-    "test": "test"
+  "version": "0.1.0",
+  "author": "Jared Kerim",
+  "bugs": {
+    "url": "https://github.com/mozilla/page-metadata-service/issues"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/mozilla/page-metadata-service.git"
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "domino": "^1.0.25",
+    "express": "^4.14.0",
+    "node-fetch": "^1.5.3",
+    "page-metadata-parser": "^0.2.1"
   },
+  "devDependencies": {
+    "eslint": "^3.2.2",
+    "eslint-plugin-node": "^2.0.0"
+  },
+  "engines": {
+    "node": 6,
+    "npm": 2
+  },
+  "homepage": "https://github.com/mozilla/page-metadata-service#readme",
   "keywords": [
     "page",
     "summary",
@@ -19,22 +30,14 @@
     "service",
     "api"
   ],
-  "author": "Jared Kerim",
   "license": "MPL-2.0",
-  "bugs": {
-    "url": "https://github.com/mozilla/page-metadata-service/issues"
+  "main": "service.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mozilla/page-metadata-service.git"
   },
-  "homepage": "https://github.com/mozilla/page-metadata-service#readme",
-  "dependencies": {
-    "body-parser": "^1.15.2",
-    "domino": "^1.0.25",
-    "express": "^4.14.0",
-    "node-fetch": "^1.5.3",
-    "page-metadata-parser": "^0.2.1",
-    "urlparse": "0.0.1"
-  },
-  "devDependencies": {
-    "eslint": "^2.13.1",
-    "eslint-plugin-mozilla": "0.0.3"
+  "scripts": {
+    "test": "npm run test:lint",
+    "test:lint": "eslint ."
   }
 }
