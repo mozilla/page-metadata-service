@@ -75,6 +75,7 @@ function getUrlMetadata(url) {
 
 const app = express();
 app.use(bodyParser.json()); // for parsing application/json
+app.disable('x-powered-by');
 
 app.post('/v1/metadata', function(req, res) {
   const responseData = {
