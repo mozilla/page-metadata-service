@@ -6,27 +6,25 @@ const {app, errorMessages} = require('../service');
 chai.use(chaiHttp);
 chai.should();
 
-const exampleMetadata = {
-  url: 'http://www.example.com/good',
-  original_url: 'http://www.example.com/good',
-  title: 'An Example Page',
-  description: 'An example description',
-  favicon_url: 'http://www.example.com/rich-icon.png',
-  images: [
-    {
-      'url': 'http://www.example.com/preview.png',
-      'entropy': 1,
-      'height': 500,
-      'width': 500,
-    }
-  ],
-};
-
 const goodExampleUrl = 'http://www.example.com/good';
 const badExampleUrl = 'http://www.example.com/bad';
 
-function clone(original) {
-  return JSON.parse(JSON.stringify(original));
+function getExampleMetadata() {
+  return {
+    url: 'http://www.example.com/good',
+    original_url: 'http://www.example.com/good',
+    title: 'An Example Page',
+    description: 'An example description',
+    favicon_url: 'http://www.example.com/rich-icon.png',
+    images: [
+      {
+        'url': 'http://www.example.com/preview.png',
+        'entropy': 1,
+        'height': 500,
+        'width': 500
+      }
+    ]
+  };
 }
 
 describe('Metadata API Tests', function() {
@@ -81,6 +79,8 @@ describe('Metadata API Tests', function() {
   });
 
   it('should return 200 with metadata for a url', (done) => {
+    const exampleMetadata = getExampleMetadata();
+
     fetchMock.mock(
       goodExampleUrl,
       `
@@ -101,15 +101,14 @@ describe('Metadata API Tests', function() {
       .set('content-type', 'application/json')
       .send(JSON.stringify({urls: [goodExampleUrl]}))
       .end((err, res) => {
-
-        res.should.have.status(200);
-
         const expectedResponse = {
           error: '',
-          urls: {}
+          urls: {
+            [goodExampleUrl]: exampleMetadata
+          }
         };
-        expectedResponse.urls[goodExampleUrl] = exampleMetadata;
 
+        res.should.have.status(200);
         res.body.should.deep.equal(expectedResponse);
 
         done();
@@ -117,6 +116,8 @@ describe('Metadata API Tests', function() {
   });
 
   it('should fallback to favicon.ico if no rich icon found', (done) => {
+    const exampleMetadata = getExampleMetadata();
+
     fetchMock.mock(
       goodExampleUrl,
       `
@@ -131,7 +132,7 @@ describe('Metadata API Tests', function() {
       `
     );
 
-    const expectedMetadata = clone(exampleMetadata);
+    const expectedMetadata = getExampleMetadata();
     expectedMetadata.favicon_url = 'http://www.example.com/favicon.ico';
     delete expectedMetadata.icon_url;
 
@@ -140,15 +141,14 @@ describe('Metadata API Tests', function() {
       .set('content-type', 'application/json')
       .send(JSON.stringify({urls: [goodExampleUrl]}))
       .end((err, res) => {
-
-        res.should.have.status(200);
-
         const expectedResponse = {
           error: '',
-          urls: {}
+          urls: {
+            [goodExampleUrl]: expectedMetadata
+          }
         };
-        expectedResponse.urls[goodExampleUrl] = expectedMetadata;
 
+        res.should.have.status(200);
         res.body.should.deep.equal(expectedResponse);
 
         done();
@@ -180,6 +180,8 @@ describe('Metadata API Tests', function() {
   });
 
   it('should only return absolute URLs', (done) => {
+    const exampleMetadata = getExampleMetadata();
+
     const baseUrl = 'http://www.example.com';
     const relativeImageUrl = '/media/image.png';
     const absoluteImageUrl = baseUrl + relativeImageUrl;
@@ -201,7 +203,7 @@ describe('Metadata API Tests', function() {
       `
     );
 
-    const expectedMetadata = clone(exampleMetadata);
+    const expectedMetadata = getExampleMetadata();
     expectedMetadata.images[0].url = absoluteImageUrl;
     expectedMetadata.favicon_url = absoluteIconUrl;
 
@@ -210,15 +212,14 @@ describe('Metadata API Tests', function() {
       .set('content-type', 'application/json')
       .send(JSON.stringify({urls: [goodExampleUrl]}))
       .end((err, res) => {
-
-        res.should.have.status(200);
-
         const expectedResponse = {
           error: '',
-          urls: {}
+          urls: {
+            [goodExampleUrl]: expectedMetadata
+          }
         };
-        expectedResponse.urls[goodExampleUrl] = expectedMetadata;
 
+        res.should.have.status(200);
         res.body.should.deep.equal(expectedResponse);
 
         done();
