@@ -101,15 +101,14 @@ describe('Metadata API Tests', function() {
       .set('content-type', 'application/json')
       .send(JSON.stringify({urls: [goodExampleUrl]}))
       .end((err, res) => {
-
-        res.should.have.status(200);
-
         const expectedResponse = {
           error: '',
-          urls: {}
+          urls: {
+            [goodExampleUrl]: exampleMetadata
+          }
         };
-        expectedResponse.urls[goodExampleUrl] = exampleMetadata;
 
+        res.should.have.status(200);
         res.body.should.deep.equal(expectedResponse);
 
         done();
@@ -140,15 +139,14 @@ describe('Metadata API Tests', function() {
       .set('content-type', 'application/json')
       .send(JSON.stringify({urls: [goodExampleUrl]}))
       .end((err, res) => {
-
-        res.should.have.status(200);
-
         const expectedResponse = {
           error: '',
-          urls: {}
+          urls: {
+            [goodExampleUrl]: expectedMetadata
+          }
         };
-        expectedResponse.urls[goodExampleUrl] = expectedMetadata;
 
+        res.should.have.status(200);
         res.body.should.deep.equal(expectedResponse);
 
         done();
@@ -166,13 +164,12 @@ describe('Metadata API Tests', function() {
       .set('content-type', 'application/json')
       .send(JSON.stringify({urls: [badExampleUrl]}))
       .end((err, res) => {
-        res.should.have.status(200);
-
         const expectedResponse = {
           error: '',
           urls: {}
         };
 
+        res.should.have.status(200);
         res.body.should.deep.equal(expectedResponse);
 
         done();

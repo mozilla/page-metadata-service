@@ -42,7 +42,9 @@ function getDocumentMetadata(url, window) {
     width: 500,
   }];
 
-  console.log(`Generated Metadata for ${url}:\n${JSON.stringify(metadata)}`); // eslint-disable-line no-console
+  if (process.env.NODE_ENV !== 'test') {
+    console.log(`Generated Metadata for ${url}:\n${JSON.stringify(metadata)}`); // eslint-disable-line no-console
+  }
 
   return metadata;
 }
@@ -95,7 +97,7 @@ app.post('/', function(req, res) {
       responseData.urls = buildObj(urlsData.map((urlData) => [urlData.url, urlData]));
       res.json(responseData);
     })
-    .catch((err) => fail(err.message), 500);
+    .catch((err) => fail(err.message, 500));
 });
 
 app.listen(7001, function() {
