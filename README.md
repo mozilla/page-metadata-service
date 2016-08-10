@@ -13,7 +13,7 @@ URL Metadata
 
 * **URL**
 
-  https://metadata.dev.mozaws.net/
+  https://metadata.dev.mozaws.net/v1/metadata
 
 * **Method:**
 
@@ -94,7 +94,7 @@ URL Metadata
 * **Sample Call:**
 
         $.ajax({
-          url: "https://metadata.dev.mozaws.net/,
+          url: "https://metadata.dev.mozaws.net/v1/metadata,
           type : "POST",
           dataType: "json",
           contentType : "application/json",

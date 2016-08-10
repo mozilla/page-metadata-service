@@ -37,7 +37,7 @@ describe('Metadata API Tests', function() {
 
   it('should raise 415 if content header is not set', (done) => {
     chai.request(app)
-      .post('/')
+      .post('/v1/metadata')
       .send(JSON.stringify({urls: [goodExampleUrl]}))
       .end((err, res) => {
         res.should.have.status(415);
@@ -48,7 +48,7 @@ describe('Metadata API Tests', function() {
 
   it('should raise 400 if missing JSON body', (done) => {
     chai.request(app)
-      .post('/')
+      .post('/v1/metadata')
       .set('content-type', 'application/json')
       .end((err, res) => {
         res.should.have.status(400);
@@ -59,7 +59,7 @@ describe('Metadata API Tests', function() {
 
   it('should raise 400 if missing urls parameter', (done) => {
     chai.request(app)
-      .post('/')
+      .post('/v1/metadata')
       .set('content-type', 'application/json')
       .send(JSON.stringify({}))
       .end((err, res) => {
@@ -71,7 +71,7 @@ describe('Metadata API Tests', function() {
 
   it('should raise 400 if urls is empty', (done) => {
     chai.request(app)
-      .post('/')
+      .post('/v1/metadata')
       .set('content-type', 'application/json')
       .send(JSON.stringify({urls: []}))
       .end((err, res) => {
@@ -98,7 +98,7 @@ describe('Metadata API Tests', function() {
     );
 
     chai.request(app)
-      .post('/')
+      .post('/v1/metadata')
       .set('content-type', 'application/json')
       .send(JSON.stringify({urls: [goodExampleUrl]}))
       .end((err, res) => {
@@ -137,7 +137,7 @@ describe('Metadata API Tests', function() {
     delete expectedMetadata.icon_url;
 
     chai.request(app)
-      .post('/')
+      .post('/v1/metadata')
       .set('content-type', 'application/json')
       .send(JSON.stringify({urls: [goodExampleUrl]}))
       .end((err, res) => {
@@ -163,7 +163,7 @@ describe('Metadata API Tests', function() {
     );
 
     chai.request(app)
-      .post('/')
+      .post('/v1/metadata')
       .set('content-type', 'application/json')
       .send(JSON.stringify({urls: [badExampleUrl]}))
       .end((err, res) => {
@@ -207,7 +207,7 @@ describe('Metadata API Tests', function() {
     expectedMetadata.favicon_url = absoluteIconUrl;
 
     chai.request(app)
-      .post('/')
+      .post('/v1/metadata')
       .set('content-type', 'application/json')
       .send(JSON.stringify({urls: [goodExampleUrl]}))
       .end((err, res) => {
@@ -222,6 +222,18 @@ describe('Metadata API Tests', function() {
 
         res.body.should.deep.equal(expectedResponse);
 
+        done();
+      });
+  });
+});
+
+describe('Stub Tests', function() {
+  it('should raise 404 if root path is hit', (done) => {
+    chai.request(app)
+      .post('/')
+      .end((err, res) => {
+        res.should.have.status(404);
+        res.body.error.should.equal(errorMessages.badPath);
         done();
       });
   });

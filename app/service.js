@@ -6,6 +6,7 @@ const {getMetadata} = require('page-metadata-parser');
 require('isomorphic-fetch');
 
 const errorMessages = {
+  badPath: 'This is not a valid path for this service.  Please refer to the documentation: https://github.com/mozilla/page-metadata-service#url-metadata',
   headerRequired: 'The content-type header must be set to application/json.',
   urlsRequired: 'The post body must be a JSON payload in the following format: {urls: ["http://example.com"]}.',
   maxUrls: 'A maximum of 20 urls can be sent for processing in one call.'
@@ -76,7 +77,7 @@ function getUrlMetadata(url) {
 const app = express();
 app.use(bodyParser.json()); // for parsing application/json
 
-app.post('/', function(req, res) {
+app.post('/v1/metadata', function(req, res) {
   const responseData = {
     error: '',
     urls: []
@@ -107,6 +108,12 @@ app.post('/', function(req, res) {
     .catch((err) => {
       fail(err.message, 500);
     });
+});
+
+app.post('/', function(req, res) {
+  res.status(404).json({
+    error: errorMessages.badPath,
+  });
 });
 
 app.listen(7001, function() {
