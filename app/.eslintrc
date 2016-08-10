@@ -1,6 +1,7 @@
 {
   "env": {
     "es6": true,
+    "mocha": true,
     "node": true,
   },
   "plugins": [
@@ -10,8 +11,12 @@
     "eslint:recommended",
     "plugin:node/recommended"
   ],
+  "globals": {
+    "fetch"
+  },
   "rules": {
     "node/no-unsupported-features": [2, {"version": 6}],
+    "node/no-unpublished-require": 0,
 
     "array-bracket-spacing": [2, "never"],
     "camelcase": 0,

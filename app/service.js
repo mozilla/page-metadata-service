@@ -1,13 +1,21 @@
 const bodyParser = require('body-parser');
 const express = require('express');
 const domino = require('domino');
-const fetch = require('node-fetch');
 const urlparse = require('url');
 const {getMetadata} = require('page-metadata-parser');
+require('isomorphic-fetch');
+
+const errorMessages = {
+  headerRequired: 'The content-type header must be set to application/json.',
+  urlsRequired: 'The post body must be a JSON payload in the following format: {urls: ["http://example.com"]}.',
+  maxUrls: 'A maximum of 20 urls can be sent for processing in one call.'
+};
 
 function buildObj(pairs) {
   return pairs.reduce((newObj, [key, value]) => {
-    newObj[key] = value;
+    if(key) {
+      newObj[key] = value;
+    }
     return newObj;
   }, {});
 }
@@ -20,6 +28,7 @@ function getDocumentMetadata(url, window) {
   metadata.original_url = url;
   metadata.provider_url = url;
 
+  metadata.favicon_url = metadata.icon_url;
   if (!metadata.favicon_url) {
     const parsedUrl = urlparse.parse(url);
     metadata.favicon_url = `${parsedUrl.protocol}//${parsedUrl.host}/favicon.ico`;
@@ -41,6 +50,15 @@ function getDocumentMetadata(url, window) {
 
 function getUrlMetadata(url) {
   return fetch(url)
+    .then((res) => {
+      if (res.status >= 200 && res.status < 300) {
+        return res;
+      } else {
+        const error = new Error(res.statusText);
+        error.res = res;
+        throw error;
+      }
+    })
     .then((res) => res.text())
     .then((body) => getDocumentMetadata(url, domino.createWindow(body)))
     .catch((err) => ({}));
@@ -50,17 +68,23 @@ const app = express();
 app.use(bodyParser.json()); // for parsing application/json
 
 app.post('/', function(req, res) {
-  const response = {
+  const responseData = {
     error: '',
     urls: []
   };
-  const fail = (reason) => {
-    response.error = reason;
-    res.json(response);
+
+  const fail = (reason, status) => {
+    responseData.error = reason;
+    res.status(status).json(responseData);
   };
 
-  if (!req.body.urls) {
-    fail(`Unable to locate 'urls' in body: ${JSON.stringify(req.body)}`);
+  if (req.headers['content-type'] !== 'application/json') {
+    fail(errorMessages.headerRequired, 415);
+    return;
+  }
+
+  if (!req.body.urls || req.body.urls.length <= 0) {
+    fail(errorMessages.urlsRequired, 400);
     return;
   }
 
@@ -68,11 +92,16 @@ app.post('/', function(req, res) {
 
   Promise.all(promises)
     .then((urlsData) => {
-      response.urls = buildObj(urlsData.map((urlData) => [urlData.url, urlData]));
-      res.json(response);
+      responseData.urls = buildObj(urlsData.map((urlData) => [urlData.url, urlData]));
+      res.json(responseData);
     })
-    .catch((err) => fail(err.message));
+    .catch((err) => fail(err.message), 500);
 });
 
 app.listen(7001, function() {
 });
+
+module.exports = {
+  app,
+  errorMessages
+};
