@@ -9,7 +9,6 @@ chai.should();
 const exampleMetadata = {
   url: 'http://www.example.com/good',
   original_url: 'http://www.example.com/good',
-  provider_url: 'http://www.example.com/good',
   title: 'An Example Page',
   description: 'An example description',
   favicon_url: 'http://www.example.com/rich-icon.png',

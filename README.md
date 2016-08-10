@@ -60,7 +60,6 @@ URL Metadata
             http://www.mozilla.org: {
               url: "http://www.mozilla.org",
               original_url: "http://www.mozilla.org",
-              provider_url: "http://www.mozilla.org",
               title: "We\u2019re building a better Internet",
               description: "Did you know? Mozilla \u2014 the maker of Firefox \u2014 fights to keep the Internet a global public resource open and accessible to all.",
               favicon_url: "http://www.mozilla.org/media/img/favicon/apple-touch-icon-180x180.00050c5b754e.png",
