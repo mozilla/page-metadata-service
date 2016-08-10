@@ -20,31 +20,38 @@ function buildObj(pairs) {
   }, {});
 }
 
+function makeUrlAbsolute(base, relative) {
+  const relativeParsed = urlparse.parse(relative);
+
+  if (relativeParsed.host === null) {
+    return urlparse.resolve(base, relative);
+  }
+
+  return relative;
+}
+
 function getDocumentMetadata(url, window) {
   const doc = window.document;
   const metadata = getMetadata(doc);
 
-  metadata.url = url;
-  metadata.original_url = url;
-  metadata.provider_url = url;
+  const responseData = {
+    url: url,
+    provider_url: url,
+    original_url: url,
+    title: metadata.title,
+    description: metadata.description,
+    favicon_url: metadata.icon_url ? makeUrlAbsolute(url, metadata.icon_url) : makeUrlAbsolute(url, '/favicon.ico'),
+    images: [{
+      url: makeUrlAbsolute(url, metadata.image_url),
+      width: 500,
+      height: 500,
+      entropy: 1.0,
+    }]
+  };
 
-  metadata.favicon_url = metadata.icon_url;
-  if (!metadata.favicon_url) {
-    const parsedUrl = urlparse.parse(url);
-    metadata.favicon_url = `${parsedUrl.protocol}//${parsedUrl.host}/favicon.ico`;
-  }
+  console.log(`Generated Metadata for ${url}:\n${JSON.stringify(responseData)}`); // eslint-disable-line no-console
 
-  metadata.image_url = metadata.image_url && metadata.image_url.replace(/^\/\//, 'https://');
-  metadata.images = [{
-    entropy: 1.0,
-    height: 500,
-    url: metadata.image_url,
-    width: 500,
-  }];
-
-  console.log(`Generated Metadata for ${url}:\n${JSON.stringify(metadata)}`); // eslint-disable-line no-console
-
-  return metadata;
+  return responseData;
 }
 
 
@@ -61,7 +68,9 @@ function getUrlMetadata(url) {
     })
     .then((res) => res.text())
     .then((body) => getDocumentMetadata(url, domino.createWindow(body)))
-    .catch((err) => ({}));
+    .catch((err) => {
+      return {};
+    });
 }
 
 const app = express();
@@ -95,7 +104,9 @@ app.post('/', function(req, res) {
       responseData.urls = buildObj(urlsData.map((urlData) => [urlData.url, urlData]));
       res.json(responseData);
     })
-    .catch((err) => fail(err.message), 500);
+    .catch((err) => {
+      fail(err.message, 500);
+    });
 });
 
 app.listen(7001, function() {

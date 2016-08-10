@@ -7,10 +7,12 @@ chai.use(chaiHttp);
 chai.should();
 
 const exampleMetadata = {
+  url: 'http://www.example.com/good',
+  original_url: 'http://www.example.com/good',
+  provider_url: 'http://www.example.com/good',
+  title: 'An Example Page',
   description: 'An example description',
   favicon_url: 'http://www.example.com/rich-icon.png',
-  icon_url: 'http://www.example.com/rich-icon.png',
-  image_url: 'http://www.example.com/preview.png',
   images: [
     {
       'url': 'http://www.example.com/preview.png',
@@ -19,15 +21,14 @@ const exampleMetadata = {
       'width': 500,
     }
   ],
-  original_url: 'http://www.example.com/good',
-  provider_url: 'http://www.example.com/good',
-  title: 'An Example Page',
-  url: 'http://www.example.com/good'
 };
 
 const goodExampleUrl = 'http://www.example.com/good';
 const badExampleUrl = 'http://www.example.com/bad';
 
+function clone(original) {
+  return JSON.parse(JSON.stringify(original));
+}
 
 describe('Metadata API Tests', function() {
   afterEach(function() {
@@ -131,7 +132,7 @@ describe('Metadata API Tests', function() {
       `
     );
 
-    const expectedMetadata = JSON.parse(JSON.stringify(exampleMetadata));
+    const expectedMetadata = clone(exampleMetadata);
     expectedMetadata.favicon_url = 'http://www.example.com/favicon.ico';
     delete expectedMetadata.icon_url;
 
@@ -172,6 +173,52 @@ describe('Metadata API Tests', function() {
           error: '',
           urls: {}
         };
+
+        res.body.should.deep.equal(expectedResponse);
+
+        done();
+      });
+  });
+
+  it('should only return absolute URLs', (done) => {
+    const baseUrl = 'http://www.example.com';
+    const relativeImageUrl = '/media/image.png';
+    const absoluteImageUrl = baseUrl + relativeImageUrl;
+    const relativeIconUrl = '/rich-icon.png';
+    const absoluteIconUrl = baseUrl + relativeIconUrl;
+
+    fetchMock.mock(
+      goodExampleUrl,
+      `
+        <html>
+          <head>
+            <title>${exampleMetadata.title}</title>
+            <meta name="description" content="${exampleMetadata.description}" />
+            <meta name="thumbnail" content="${relativeImageUrl}" />
+            <link rel="icon" href="${relativeIconUrl}" />
+          </head>
+          <body></body>
+        </html>
+      `
+    );
+
+    const expectedMetadata = clone(exampleMetadata);
+    expectedMetadata.images[0].url = absoluteImageUrl;
+    expectedMetadata.favicon_url = absoluteIconUrl;
+
+    chai.request(app)
+      .post('/')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify({urls: [goodExampleUrl]}))
+      .end((err, res) => {
+
+        res.should.have.status(200);
+
+        const expectedResponse = {
+          error: '',
+          urls: {}
+        };
+        expectedResponse.urls[goodExampleUrl] = expectedMetadata;
 
         res.body.should.deep.equal(expectedResponse);
 
