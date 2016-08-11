@@ -93,7 +93,7 @@ app.post('/v1/metadata', function(req, res) {
     return;
   }
 
-  if (!req.body.urls || req.body.urls.length <= 0) {
+  if (!req.body.urls || !Array.isArray(req.body.urls) || req.body.urls.length <= 0) {
     fail(errorMessages.urlsRequired, 400);
     return;
   }
