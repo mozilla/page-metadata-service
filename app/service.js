@@ -87,7 +87,8 @@ app.post('/v1/metadata', function(req, res) {
     res.status(status).json(responseData);
   };
 
-  if (req.headers['content-type'] !== 'application/json') {
+  // #45: Server fails if you try passing charset in Content-Type
+  if (!(/^application\/json/).test(req.headers['content-type'])) {
     fail(errorMessages.headerRequired, 415);
     return;
   }
