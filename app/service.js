@@ -49,7 +49,9 @@ function getDocumentMetadata(url, window) {
     }]
   };
 
-  console.log(`Generated Metadata for ${url}:\n${JSON.stringify(responseData)}`); // eslint-disable-line no-console
+  if (!process.env.CI) {
+    console.log(`Generated Metadata for ${url}:\n${JSON.stringify(responseData)}`); // eslint-disable-line no-console
+  }
 
   return responseData;
 }
