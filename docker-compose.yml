@@ -2,6 +2,8 @@ app:
   build: ./app
   tty: true
   stdin_open: true
+  links:
+    - redis
   expose:
     - "7001"
   restart: always
@@ -14,3 +16,6 @@ nginx:
   ports:
     - "80:80"
   restart: always
+
+redis:
+  image: redis
