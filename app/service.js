@@ -1,7 +1,8 @@
 const bodyParser = require('body-parser');
-const express = require('express');
 const domino = require('domino');
+const express = require('express');
 const urlparse = require('url');
+const versionData = require('./version.json');
 const {getMetadata} = require('page-metadata-parser');
 require('isomorphic-fetch');
 
@@ -114,6 +115,18 @@ app.post('/', function(req, res) {
   res.status(404).json({
     error: errorMessages.badPath,
   });
+});
+
+app.get('/__heartbeat__', function(req, res) {
+  res.sendStatus(200);
+});
+
+app.get('/__lbheartbeat__', function(req, res) {
+  res.sendStatus(200);
+});
+
+app.get('/__version__', function(req, res) {
+  res.json(versionData);
 });
 
 app.listen(7001, function() {

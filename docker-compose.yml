@@ -1,5 +1,5 @@
 app:
-  build: ./app
+  image: app:build
   tty: true
   stdin_open: true
   expose:

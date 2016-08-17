@@ -1,5 +1,5 @@
 build:
-	docker build -t app:build app/
+	./scripts/build.sh
 
 test: build
 	docker run -t app:build sh -c "npm test"
@@ -7,5 +7,5 @@ test: build
 compose_build:
 	docker-compose build
 
-up: compose_build
+up: build compose_build
 	docker-compose up
