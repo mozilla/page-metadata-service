@@ -42,13 +42,17 @@ function getDocumentMetadata(url, window) {
     title: metadata.title,
     description: metadata.description,
     favicon_url: metadata.icon_url ? makeUrlAbsolute(url, metadata.icon_url) : makeUrlAbsolute(url, '/favicon.ico'),
-    images: [{
+    images: []
+  };
+
+  if (metadata.image_url) {
+    responseData.images = [{
       url: makeUrlAbsolute(url, metadata.image_url),
       width: 500,
       height: 500,
       entropy: 1.0,
-    }]
-  };
+    }];
+  }
 
   console.log(`Generated Metadata for ${url}:\n${JSON.stringify(responseData)}`); // eslint-disable-line no-console
 
