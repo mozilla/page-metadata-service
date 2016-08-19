@@ -11,7 +11,7 @@
     "domino": "^1.0.25",
     "express": "^4.14.0",
     "isomorphic-fetch": "^2.2.1",
-    "page-metadata-parser": "^0.2.1"
+    "page-metadata-parser": "^0.3.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
