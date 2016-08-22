@@ -38,3 +38,6 @@ jspm_packages
 
 # version json
 version.json
+
+# Env file
+.env

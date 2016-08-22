@@ -1,6 +1,7 @@
 const bodyParser = require('body-parser');
 const domino = require('domino');
 const express = require('express');
+const raven = require('raven');
 const urlparse = require('url');
 const versionData = require('./version.json');
 const {getMetadata} = require('page-metadata-parser');
@@ -79,7 +80,16 @@ function getUrlMetadata(url) {
 }
 
 const app = express();
-app.use(bodyParser.json()); // for parsing application/json
+
+const sentryDSN = process.env.SENTRY_DSN;
+
+// The request handler must be the first item
+app.use(raven.middleware.express.requestHandler(sentryDSN));
+
+// For parsing application/json
+app.use(bodyParser.json());
+
+// Disable x-powered-by header
 app.disable('x-powered-by');
 
 app.post('/v1/metadata', function(req, res) {
@@ -133,6 +143,9 @@ app.get('/__lbheartbeat__', function(req, res) {
 app.get('/__version__', function(req, res) {
   res.json(versionData);
 });
+
+// The error handler must be before any other error middleware
+app.use(raven.middleware.express.errorHandler(sentryDSN));
 
 app.listen(7001, function() {
 });
