@@ -1,6 +1,7 @@
 app:
   image: app:build
   tty: true
+  env_file: .env
   stdin_open: true
   expose:
     - "7001"
