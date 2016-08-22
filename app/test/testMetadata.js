@@ -225,6 +225,45 @@ describe('Metadata API Tests', function() {
         done();
       });
   });
+
+  it('should return no image entry if no preview found', (done) => {
+    const exampleMetadata = getExampleMetadata();
+
+    fetchMock.mock(
+      goodExampleUrl,
+      `
+        <html>
+          <head>
+            <title>${exampleMetadata.title}</title>
+            <meta name="description" content="${exampleMetadata.description}" />
+            <link rel="icon" href="${exampleMetadata.favicon_url}" />
+          </head>
+          <body></body>
+        </html>
+      `
+    );
+
+    const expectedMetadata = getExampleMetadata();
+    expectedMetadata.images = [];
+
+    chai.request(app)
+      .post('/v1/metadata')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify({urls: [goodExampleUrl]}))
+      .end((err, res) => {
+        const expectedResponse = {
+          error: '',
+          urls: {
+            [goodExampleUrl]: expectedMetadata
+          }
+        };
+
+        res.should.have.status(200);
+        res.body.should.deep.equal(expectedResponse);
+
+        done();
+      });
+  });
 });
 
 describe('Stub Tests', function() {
