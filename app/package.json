@@ -43,6 +43,7 @@
     "url": "git+https://github.com/mozilla/page-metadata-service.git"
   },
   "scripts": {
+    "start": "node service",
     "test": "npm-run-all test:*",
     "test:lint": "eslint .",
     "test:mocha": "istanbul cover _mocha --report lcovonly -- test/*.js -R spec"
