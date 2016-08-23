@@ -44,6 +44,7 @@
     "url": "git+https://github.com/mozilla/page-metadata-service.git"
   },
   "scripts": {
+    "prestart": "../scripts/echo_version_json.sh > version.json",
     "start": "node service",
     "test": "npm-run-all test:*",
     "test:lint": "eslint .",
