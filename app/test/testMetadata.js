@@ -78,6 +78,24 @@ describe('Metadata API Tests', function() {
       });
   });
 
+  it('should return 400 if too many urls requested', (done) => {
+    app.set('maxUrls', 2);
+
+    chai.request(app)
+      .post('/v1/metadata')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify({urls: [
+        'http://example.com/1',
+        'http://example.com/2',
+        'http://example.com/3'
+      ]}))
+      .end((err, res) => {
+        res.should.have.status(400);
+        res.body.request_error.should.equal(errorMessages.maxUrls);
+        done();
+      });
+  });
+
   it('should return 200 with metadata for a url', (done) => {
     const exampleMetadata = getExampleMetadata();
 
