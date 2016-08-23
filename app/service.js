@@ -55,7 +55,6 @@ app.post('/v1/metadata', function(req, res) {
       results.forEach((result) => {
         const {url, data, error} = result;
         if (error) {
-          sentryClient.captureException(error);
           responseData.url_errors[url] = error.toString();
         } else {
           responseData.urls[url] = data;
