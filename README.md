@@ -55,9 +55,10 @@ URL Metadata
       ex success:
 
         {
-          error: "",
+          request_error: "",
+          url_errors: {},
           urls: {
-            http://www.mozilla.org: {
+            "http://www.mozilla.org": {
               url: "http://www.mozilla.org",
               original_url: "http://www.mozilla.org",
               title: "We\u2019re building a better Internet",
@@ -73,10 +74,20 @@ URL Metadata
           }
         }
 
-      ex failure:
+      ex request failure:
 
         {
-          error: "The Content-Type header must be set to application/json"
+          request_error: "The Content-Type header must be set to application/json",
+          url_errors: {},
+          urls: {}
+        }
+
+      ex parse failure:
+        {
+          request_error: "",
+          url_errors: {
+            "http://www.mozilla.org": "Fetch Error: 404 not found"
+          },
           urls: {}
         }
 

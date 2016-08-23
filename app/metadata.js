@@ -42,21 +42,27 @@ function getDocumentMetadata(url, window) {
 
 
 function getUrlMetadata(url) {
-  return fetch(url)
-    .then((res) => {
-      if (res.status >= 200 && res.status < 300) {
-        return res;
-      } else {
-        const error = new Error(res.statusText);
-        error.res = res;
-        throw error;
-      }
-    })
-    .then((res) => res.text())
-    .then((body) => getDocumentMetadata(url, domino.createWindow(body)))
-    .catch((err) => {
-      return {};
-    });
+  return new Promise((resolve) => {
+    const result = {url};
+    fetch(url)
+      .then((res) => {
+        if (res.status >= 200 && res.status < 300) {
+          return res;
+        } else {
+          throw new Error(`Request Failure: ${res.status} ${res.statusText}`);
+        }
+      })
+      .then((res) => res.text())
+      .then((body) => {
+        const win = domino.createWindow(body);
+        result.data = getDocumentMetadata(url, win);
+        resolve(result);
+      })
+      .catch((err) => {
+        result.error = err;
+        resolve(result);
+      });
+  });
 }
 
 module.exports = {
