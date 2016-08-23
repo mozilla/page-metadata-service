@@ -19,7 +19,7 @@ function getDocumentMetadata(url, window) {
   const metadata = getMetadata(doc);
 
   const responseData = {
-    url,
+    url: metadata.url || url,
     original_url: url,
     title: metadata.title,
     description: metadata.description,
