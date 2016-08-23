@@ -13,6 +13,9 @@ const errorMessages = {
 
 const app = express();
 
+// Maximum number of URLs per request
+app.set('maxUrls', 20);
+
 const sentryDSN = process.env.SENTRY_DSN;
 const sentryClient = new raven.Client(sentryDSN);
 
@@ -45,6 +48,12 @@ app.post('/v1/metadata', function(req, res) {
 
   if (!req.body.urls || !Array.isArray(req.body.urls) || req.body.urls.length <= 0) {
     fail(errorMessages.urlsRequired, 400);
+    return;
+  }
+
+  const maxUrls = app.get('maxUrls');
+  if (req.body.urls.length > maxUrls) {
+    fail(errorMessages.maxUrls, 400);
     return;
   }
 
