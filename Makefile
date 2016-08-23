@@ -9,3 +9,6 @@ compose_build:
 
 up: build compose_build
 	docker-compose up
+
+upd: build compose_build
+	docker-compose up -d
