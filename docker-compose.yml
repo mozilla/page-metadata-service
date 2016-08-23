@@ -5,6 +5,8 @@ app:
   stdin_open: true
   expose:
     - "7001"
+  links:
+    - statsd
   restart: always
   command: node service.js 
 
@@ -15,3 +17,11 @@ nginx:
   ports:
     - "80:80"
   restart: always
+
+statsd:
+  build: ./statsd
+  tty: true
+  expose:
+    - "8125"
+  ports:
+    - "8125:8125"

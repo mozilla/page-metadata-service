@@ -1,3 +1,4 @@
+const statsdClient = require('./statsd');
 const domino = require('domino');
 const urlparse = require('url');
 const {getMetadata} = require('page-metadata-parser');
@@ -44,21 +45,42 @@ function getDocumentMetadata(url, window) {
 function getUrlMetadata(url) {
   return new Promise((resolve) => {
     const result = {url};
+
+    const startFetch = statsdClient.getTimestamp();
     fetch(url)
       .then((res) => {
+        const endFetch = statsdClient.getTimestamp();
+        statsdClient.timing('fetch_time', (endFetch - startFetch));
+
         if (res.status >= 200 && res.status < 300) {
+          statsdClient.increment('fetch_success');
           return res;
         } else {
+          statsdClient.increment('fetch_fail');
           throw new Error(`Request Failure: ${res.status} ${res.statusText}`);
         }
       })
       .then((res) => res.text())
       .then((body) => {
-        const win = domino.createWindow(body);
-        result.data = getDocumentMetadata(url, win);
+        const startParse = statsdClient.getTimestamp();
+
+        try {
+          const win = domino.createWindow(body);
+          result.data = getDocumentMetadata(url, win);
+          statsdClient.increment('parse_success');
+        } catch(e) {
+          statsdClient.increment('parse_fail');
+          throw e;
+        }
+
+        const endParse = statsdClient.getTimestamp();
+        statsdClient.timing('parse_time', (endParse - startParse));
+
+        statsdClient.increment('metadata_success');
         resolve(result);
       })
       .catch((err) => {
+        statsdClient.increment('metadata_fail');
         result.error = err;
         resolve(result);
       });
