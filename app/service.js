@@ -11,18 +11,10 @@ const errorMessages = {
   maxUrls: 'A maximum of 20 urls can be sent for processing in one call.'
 };
 
-function buildObj(pairs) {
-  return pairs.reduce((newObj, [key, value]) => {
-    if(key) {
-      newObj[key] = value;
-    }
-    return newObj;
-  }, {});
-}
-
 const app = express();
 
 const sentryDSN = process.env.SENTRY_DSN;
+const sentryClient = new raven.Client(sentryDSN);
 
 // The request handler must be the first item
 app.use(raven.middleware.express.requestHandler(sentryDSN));
@@ -35,12 +27,13 @@ app.disable('x-powered-by');
 
 app.post('/v1/metadata', function(req, res) {
   const responseData = {
-    error: '',
-    urls: []
+    request_error: '',
+    url_errors: {},
+    urls: {}
   };
 
   const fail = (reason, status) => {
-    responseData.error = reason;
+    responseData.request_error = reason;
     res.status(status).json(responseData);
   };
 
@@ -58,11 +51,20 @@ app.post('/v1/metadata', function(req, res) {
   const promises = req.body.urls.map((url) => getUrlMetadata(url));
 
   Promise.all(promises)
-    .then((urlsData) => {
-      responseData.urls = buildObj(urlsData.map((urlData) => [urlData.url, urlData]));
+    .then((results) => {
+      results.forEach((result) => {
+        const {url, data, error} = result;
+        if (error) {
+          sentryClient.captureException(error);
+          responseData.url_errors[url] = error.toString();
+        } else {
+          responseData.urls[url] = data;
+        }
+      });
       res.json(responseData);
     })
     .catch((err) => {
+      sentryClient.captureException(err);
       fail(err.message, 500);
     });
 });

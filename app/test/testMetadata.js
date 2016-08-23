@@ -38,7 +38,7 @@ describe('Metadata API Tests', function() {
       .send(JSON.stringify({urls: [goodExampleUrl]}))
       .end((err, res) => {
         res.should.have.status(415);
-        res.body.error.should.equal(errorMessages.headerRequired);
+        res.body.request_error.should.equal(errorMessages.headerRequired);
         done();
       });
   });
@@ -49,7 +49,7 @@ describe('Metadata API Tests', function() {
       .set('content-type', 'application/json')
       .end((err, res) => {
         res.should.have.status(400);
-        res.body.error.should.equal(errorMessages.urlsRequired);
+        res.body.request_error.should.equal(errorMessages.urlsRequired);
         done();
       });
   });
@@ -61,7 +61,7 @@ describe('Metadata API Tests', function() {
       .send(JSON.stringify({}))
       .end((err, res) => {
         res.should.have.status(400);
-        res.body.error.should.equal(errorMessages.urlsRequired);
+        res.body.request_error.should.equal(errorMessages.urlsRequired);
         done();
       });
   });
@@ -73,7 +73,7 @@ describe('Metadata API Tests', function() {
       .send(JSON.stringify({urls: []}))
       .end((err, res) => {
         res.should.have.status(400);
-        res.body.error.should.equal(errorMessages.urlsRequired);
+        res.body.request_error.should.equal(errorMessages.urlsRequired);
         done();
       });
   });
@@ -102,7 +102,8 @@ describe('Metadata API Tests', function() {
       .send(JSON.stringify({urls: [goodExampleUrl]}))
       .end((err, res) => {
         const expectedResponse = {
-          error: '',
+          request_error: '',
+          url_errors: {},
           urls: {
             [goodExampleUrl]: exampleMetadata
           }
@@ -142,7 +143,8 @@ describe('Metadata API Tests', function() {
       .send(JSON.stringify({urls: [goodExampleUrl]}))
       .end((err, res) => {
         const expectedResponse = {
-          error: '',
+          request_error: '',
+          url_errors: {},
           urls: {
             [goodExampleUrl]: expectedMetadata
           }
@@ -155,22 +157,60 @@ describe('Metadata API Tests', function() {
       });
   });
 
-  it('should exclude urls that failed to be retrieved', (done) => {
+  it('should return errors for urls which failed to be parsed', (done) => {
+    const exampleMetadata = getExampleMetadata();
+
     fetchMock.mock(
       badExampleUrl,
       500
     );
 
+    fetchMock.mock(
+      goodExampleUrl,
+      `
+        <html>
+          <head>
+            <title>${exampleMetadata.title}</title>
+            <meta name="description" content="${exampleMetadata.description}" />
+            <meta name="thumbnail" content="${exampleMetadata.images[0].url}" />
+            <link rel="icon" href="http://www.example.com/rich-icon.png" />
+          </head>
+          <body></body>
+        </html>
+      `
+    );
+
     chai.request(app)
       .post('/v1/metadata')
       .set('content-type', 'application/json')
-      .send(JSON.stringify({urls: [badExampleUrl]}))
+      .send(JSON.stringify({urls: [
+        goodExampleUrl,
+        badExampleUrl
+      ]}))
       .end((err, res) => {
         res.should.have.status(200);
 
+
         const expectedResponse = {
-          error: '',
-          urls: {}
+          request_error: '',
+          url_errors: {
+            'http://www.example.com/bad': 'Error: Request Failure: 500 Internal Server Error'
+          },
+          urls: {
+            'http://www.example.com/good': {
+              url: 'http://www.example.com/good',
+              original_url: 'http://www.example.com/good',
+              title: 'An Example Page',
+              description: 'An example description',
+              favicon_url: 'http://www.example.com/rich-icon.png',
+              images: [{
+                url: 'http://www.example.com/preview.png',
+                entropy: 1,
+                height: 500,
+                width: 500,
+              }]
+            }
+          }
         };
 
         res.body.should.deep.equal(expectedResponse);
@@ -213,7 +253,8 @@ describe('Metadata API Tests', function() {
       .send(JSON.stringify({urls: [goodExampleUrl]}))
       .end((err, res) => {
         const expectedResponse = {
-          error: '',
+          request_error: '',
+          url_errors: {},
           urls: {
             [goodExampleUrl]: expectedMetadata
           }
@@ -252,7 +293,8 @@ describe('Metadata API Tests', function() {
       .send(JSON.stringify({urls: [goodExampleUrl]}))
       .end((err, res) => {
         const expectedResponse = {
-          error: '',
+          request_error: '',
+          url_errors: {},
           urls: {
             [goodExampleUrl]: expectedMetadata
           }
