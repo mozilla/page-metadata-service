@@ -98,7 +98,9 @@ app.get('/__version__', function(req, res) {
 // The error handler must be before any other error middleware
 app.use(raven.middleware.express.errorHandler(sentryDSN));
 
-app.listen(7001, function() {
+const port = process.env.PORT || 7001;
+
+app.listen(port, function() {
 });
 
 module.exports = {
