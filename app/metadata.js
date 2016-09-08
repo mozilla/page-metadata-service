@@ -1,35 +1,24 @@
 const statsdClient = require('./statsd');
 const domino = require('domino');
-const urlparse = require('url');
-const {getMetadata} = require('page-metadata-parser');
+const {getMetadata, makeUrlAbsolute} = require('page-metadata-parser');
 require('isomorphic-fetch');
-
-function makeUrlAbsolute(base, relative) {
-  const relativeParsed = urlparse.parse(relative);
-
-  if (relativeParsed.host === null) {
-    return urlparse.resolve(base, relative);
-  }
-
-  return relative;
-}
 
 function getDocumentMetadata(url, window) {
   const doc = window.document;
-  const metadata = getMetadata(doc);
+  const metadata = getMetadata(doc, url);
 
   const responseData = {
-    url,
+    url: metadata.url,
     original_url: url,
     title: metadata.title,
     description: metadata.description,
-    favicon_url: metadata.icon_url ? makeUrlAbsolute(url, metadata.icon_url) : makeUrlAbsolute(url, '/favicon.ico'),
+    favicon_url: metadata.icon_url || makeUrlAbsolute(url, '/favicon.ico'),
     images: []
   };
 
   if (metadata.image_url) {
     responseData.images = [{
-      url: makeUrlAbsolute(url, metadata.image_url),
+      url: metadata.image_url,
       width: 500,
       height: 500,
       entropy: 1.0,
