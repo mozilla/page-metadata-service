@@ -1,6 +1,6 @@
 # Page Metadata Service 
 
-A simple node/express app which generates a short metadata representation of a given URL. 
+A simple node/express app which generates a short metadata representation of a given URL and related media. 
 
 ## Build
 [![Circle CI](https://circleci.com/gh/mozilla/page-metadata-service/tree/master.svg?style=svg)](https://circleci.com/gh/mozilla/page-metadata-service/tree/master)
