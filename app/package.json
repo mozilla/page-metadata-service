@@ -51,6 +51,6 @@
     "test": "npm-run-all test:*",
     "test:lint": "eslint .",
     "test:nsp": "nsp check --output summary",
-    "test:mocha": "istanbul cover _mocha --report lcovonly -- test/*.js -R spec"
+    "test:mocha": "istanbul cover _mocha --report lcovonly --print detail -- test/*.js -R spec"
   }
 }
