@@ -1,79 +1,107 @@
-const statsdClient = require('./statsd');
 const domino = require('domino');
-const {getMetadata, makeUrlAbsolute} = require('page-metadata-parser');
+const fastimage = require('fastimage');
+const parser = require('page-metadata-parser');
+const statsdClient = require('./statsd');
 require('isomorphic-fetch');
 
-function getDocumentMetadata(url, window) {
-  const doc = window.document;
-  const metadata = getMetadata(doc, url);
+// See https://github.com/mozilla/page-metadata-service/issues/89#issuecomment-243931889
+fastimage.threshold(-1);
 
-  const responseData = {
-    url: metadata.url,
-    original_url: url,
-    title: metadata.title,
-    description: metadata.description,
-    favicon_url: metadata.icon_url || makeUrlAbsolute(url, '/favicon.ico'),
-    images: []
-  };
+function fetchUrlContent(url) {
+  const startFetch = statsdClient.getTimestamp();
 
-  if (metadata.image_url) {
-    responseData.images = [{
-      url: metadata.image_url,
-      width: 500,
-      height: 500,
-      entropy: 1.0,
-    }];
-  }
+  return fetch(url).then(res => {
+    const endFetch = statsdClient.getTimestamp();
+    statsdClient.timing('fetch_time', (endFetch - startFetch));
 
-  return responseData;
-}
+    if (res.status >= 200 && res.status < 300) {
+      statsdClient.increment('fetch_success');
+      return res;
+    } else {
+      throw new Error(`Request Failure: ${res.status} ${res.statusText}`);
+    }
+  }).then(res => res.text())
+  .catch(e => {
+    statsdClient.increment('fetch_fail');
 
+    const endFetch = statsdClient.getTimestamp();
+    statsdClient.timing('fetch_time', (endFetch - startFetch));
 
-function getUrlMetadata(url) {
-  return new Promise((resolve) => {
-    const result = {url};
-
-    const startFetch = statsdClient.getTimestamp();
-    fetch(url)
-      .then((res) => {
-        const endFetch = statsdClient.getTimestamp();
-        statsdClient.timing('fetch_time', (endFetch - startFetch));
-
-        if (res.status >= 200 && res.status < 300) {
-          statsdClient.increment('fetch_success');
-          return res;
-        } else {
-          statsdClient.increment('fetch_fail');
-          throw new Error(`Request Failure: ${res.status} ${res.statusText}`);
-        }
-      })
-      .then((res) => res.text())
-      .then((body) => {
-        const startParse = statsdClient.getTimestamp();
-
-        try {
-          const win = domino.createWindow(body);
-          result.data = getDocumentMetadata(url, win);
-          statsdClient.increment('parse_success');
-        } catch(e) {
-          statsdClient.increment('parse_fail');
-          throw e;
-        }
-
-        const endParse = statsdClient.getTimestamp();
-        statsdClient.timing('parse_time', (endParse - startParse));
-
-        statsdClient.increment('metadata_success');
-        resolve(result);
-      })
-      .catch((err) => {
-        statsdClient.increment('metadata_fail');
-        result.error = err;
-        resolve(result);
-      });
+    throw e;
   });
 }
 
+function getHtmlDocument(html) {
+  return domino.createWindow(html).document;
+}
+
+function getImageInfo(imageUrl) {
+  const startImage = statsdClient.getTimestamp();
+
+  return fastimage.info(imageUrl).then(info => {
+    const endImage = statsdClient.getTimestamp();
+    statsdClient.timing('image_time', (endImage - startImage));
+    statsdClient.increment('image_success');
+
+    return info;
+  }).catch(e => {
+    const endImage = statsdClient.getTimestamp();
+    statsdClient.timing('image_time', (endImage - startImage));
+    statsdClient.increment('image_fail');
+
+    throw e;
+  });
+}
+
+function getDocumentMetadata(url, doc) {
+  const parsedMetadata = parser.getMetadata(doc, url);
+
+  const urlMetadata = {
+    url: parsedMetadata.url,
+    original_url: url,
+    title: parsedMetadata.title,
+    description: parsedMetadata.description,
+    favicon_url: parsedMetadata.icon_url || parser.makeUrlAbsolute(url, '/favicon.ico'),
+    images: []
+  };
+
+  if (parsedMetadata.image_url) {
+    return getImageInfo(parsedMetadata.image_url).then(imageInfo => {
+      urlMetadata.images = [{
+        url: parsedMetadata.image_url,
+        width: imageInfo.width,
+        height: imageInfo.height,
+      }];
+
+      return urlMetadata;
+    }).catch(e => urlMetadata);
+  } else {
+    return Promise.resolve(urlMetadata);
+  }
+}
+
+function getUrlMetadata(url) {
+  const result = {
+    url,
+    data: null,
+    error: null,
+  };
+
+  return fetchUrlContent(url)
+    .then(html => getDocumentMetadata(url, getHtmlDocument(html)))
+    .then(metadata => {
+      result.data = metadata;
+      return result;
+    }).catch(e => {
+      result.error = e;
+      return result;
+    });
+}
+
 module.exports = {
+  fetchUrlContent,
+  getDocumentMetadata,
+  getHtmlDocument,
+  getImageInfo,
   getUrlMetadata,
 };

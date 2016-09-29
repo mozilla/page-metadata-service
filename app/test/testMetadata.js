@@ -1,6 +1,8 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const fetchMock = require('fetch-mock');
+const fastimage = require('fastimage');
+const parser = require('page-metadata-parser');
 const {app, errorMessages} = require('../service');
 
 chai.use(chaiHttp);
@@ -9,6 +11,16 @@ chai.should();
 const goodExampleUrl = 'http://www.example.com/good';
 const badExampleUrl = 'http://www.example.com/bad';
 
+const originalGetMetadata = parser.getMetadata;
+
+function getExampleImageData() {
+  return {
+    height: 123,
+    width: 456,
+    url: 'http://www.example.com/preview.png',
+  };
+}
+
 function getExampleMetadata() {
   return {
     url: 'http://www.example.com/good',
@@ -16,20 +28,23 @@ function getExampleMetadata() {
     title: 'An Example Page',
     description: 'An example description',
     favicon_url: 'http://www.example.com/rich-icon.png',
-    images: [
-      {
-        'url': 'http://www.example.com/preview.png',
-        'entropy': 1,
-        'height': 500,
-        'width': 500
-      }
-    ]
+    images: [getExampleImageData()],
   };
 }
 
 describe('Metadata API Tests', function() {
   afterEach(function() {
     fetchMock.restore();
+  });
+
+  beforeEach(function() {
+    // restore getMetadata
+    parser.getMetadata = originalGetMetadata;
+
+    // Mock fastimage
+    fastimage.info = function(url) {
+      return new Promise(resolve => resolve(getExampleImageData()));
+    };
   });
 
   it('should raise 415 if content header is not set', (done) => {
@@ -134,6 +149,51 @@ describe('Metadata API Tests', function() {
       });
   });
 
+  it('should return 200 with metadata for a url if fastimage fails', (done) => {
+    fastimage.info = function(url) {
+      return new Promise((resolve, reject) => reject(new Error('Image parse failure!')));
+    };
+
+    const exampleMetadata = getExampleMetadata();
+
+    fetchMock.mock(
+      goodExampleUrl,
+      `
+        <html>
+          <head>
+            <title>${exampleMetadata.title}</title>
+            <meta name="description" content="${exampleMetadata.description}" />
+            <meta name="thumbnail" content="${exampleMetadata.images[0].url}" />
+            <link rel="icon" href="http://www.example.com/rich-icon.png" />
+          </head>
+          <body></body>
+        </html>
+      `
+    );
+
+    const expectedMetadata = getExampleMetadata();
+    expectedMetadata.images = [];
+
+    chai.request(app)
+      .post('/v1/metadata')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify({urls: [goodExampleUrl]}))
+      .end((err, res) => {
+        const expectedResponse = {
+          request_error: '',
+          url_errors: {},
+          urls: {
+            [goodExampleUrl]: expectedMetadata,
+          }
+        };
+
+        res.should.have.status(200);
+        res.body.should.deep.equal(expectedResponse);
+
+        done();
+      });
+  });
+
   it('should fallback to favicon.ico if no rich icon found', (done) => {
     const exampleMetadata = getExampleMetadata();
 
@@ -175,7 +235,7 @@ describe('Metadata API Tests', function() {
       });
   });
 
-  it('should return errors for urls which failed to be parsed', (done) => {
+  it('should return errors for urls which failed to be fetched', (done) => {
     const exampleMetadata = getExampleMetadata();
 
     fetchMock.mock(
@@ -212,25 +272,55 @@ describe('Metadata API Tests', function() {
         const expectedResponse = {
           request_error: '',
           url_errors: {
-            'http://www.example.com/bad': 'Error: Request Failure: 500 Internal Server Error'
+            'http://www.example.com/bad': 'Error: Request Failure: 500 Internal Server Error',
           },
           urls: {
-            'http://www.example.com/good': {
-              url: 'http://www.example.com/good',
-              original_url: 'http://www.example.com/good',
-              title: 'An Example Page',
-              description: 'An example description',
-              favicon_url: 'http://www.example.com/rich-icon.png',
-              images: [{
-                url: 'http://www.example.com/preview.png',
-                entropy: 1,
-                height: 500,
-                width: 500,
-              }]
-            }
+            'http://www.example.com/good': getExampleMetadata(),
           }
         };
 
+        res.body.should.deep.equal(expectedResponse);
+
+        done();
+      });
+  });
+
+  it('should return errors for urls which failed to be parsed', (done) => {
+    parser.getMetadata = function(doc, url) {
+      throw new Error('Failed to parse HTML');
+    };
+
+    const exampleMetadata = getExampleMetadata();
+
+    fetchMock.mock(
+      goodExampleUrl,
+      `
+        <html>
+          <head>
+            <title>${exampleMetadata.title}</title>
+            <meta name="description" content="${exampleMetadata.description}" />
+            <meta name="thumbnail" content="${exampleMetadata.images[0].url}" />
+            <link rel="icon" href="http://www.example.com/rich-icon.png" />
+          </head>
+          <body></body>
+        </html>
+      `
+    );
+
+    chai.request(app)
+      .post('/v1/metadata')
+      .set('content-type', 'application/json')
+      .send(JSON.stringify({urls: [goodExampleUrl]}))
+      .end((err, res) => {
+        const expectedResponse = {
+          request_error: '',
+          url_errors: {
+            [goodExampleUrl]: 'Error: Failed to parse HTML',
+          },
+          urls: {}
+        };
+
+        res.should.have.status(200);
         res.body.should.deep.equal(expectedResponse);
 
         done();
