@@ -213,7 +213,6 @@ describe('Metadata API Tests', function() {
 
     const expectedMetadata = getExampleMetadata();
     expectedMetadata.favicon_url = 'http://www.example.com/favicon.ico';
-    delete expectedMetadata.icon_url;
 
     chai.request(app)
       .post('/v1/metadata')
