@@ -61,7 +61,7 @@ function getDocumentMetadata(url, doc) {
     original_url: url,
     title: parsedMetadata.title,
     description: parsedMetadata.description,
-    favicon_url: parsedMetadata.icon_url || parser.makeUrlAbsolute(url, '/favicon.ico'),
+    favicon_url: parsedMetadata.icon_url,
     images: []
   };
 
