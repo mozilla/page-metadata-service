@@ -2,13 +2,13 @@ build:
 	./scripts/build.sh
 
 test: build
-	docker run -t app:build sh -c "npm run test:mocha"
+	docker run app:build npm run test:mocha
 
 lint: build
-	docker run -t app:build sh -c "npm run test:lint"
+	docker run app:build npm run test:lint
 
 check: build
-	docker run -t app:build sh -c "npm test"
+	docker run app:build npm test
 
 compose_build:
 	docker-compose build
