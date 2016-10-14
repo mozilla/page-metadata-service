@@ -1,4 +1,4 @@
-FROM mhart/alpine-node:6.7.0
+FROM mhart/alpine-node:6.8.0
 
 WORKDIR /app
 EXPOSE 7001
