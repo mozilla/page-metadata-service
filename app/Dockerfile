@@ -9,6 +9,6 @@ WORKDIR /app
 EXPOSE 7001
 
 COPY package.json /app/
-RUN npm install
+RUN npm install --production && rm -rf /root/.npm
 
 COPY . /app/
