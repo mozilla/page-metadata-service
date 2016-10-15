@@ -105,14 +105,25 @@ throng({
   lifetime: 60 * 1000,
   master: () => {
     console.log('Master ready');
+
+    process.on('SIGINT', () => {
+      console.log('Master got SIGINT');
+      process.exit(0);
+    });
   },
   start: (id) => {
     const instance = app.listen(port, () => {
       console.log('Worker %s listening on port %s', id, port);
     });
 
-    process.on('SIGINT', instance.close);
-    process.on('SIGTERM', instance.close);
+    process.on('SIGINT', () => {
+      console.log('Worker %s got SIGINT', id);
+      instance.close();
+    });
+    process.on('SIGTERM', () => {
+      console.log('Worker %s got SIGTERM', id);
+      instance.close();
+    });
   }
 });
 
