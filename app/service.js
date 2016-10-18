@@ -1,6 +1,7 @@
 const bodyParser = require('body-parser');
 const express = require('express');
 const raven = require('raven');
+const throng = require('throng');
 const versionData = require('./version.json');
 const {getUrlMetadata} = require('./metadata');
 
@@ -100,7 +101,30 @@ app.use(raven.middleware.express.errorHandler(sentryDSN));
 
 const port = process.env.PORT || 7001;
 
-app.listen(port, function() {
+throng({
+  lifetime: 60 * 1000,
+  master: () => {
+    console.log('Master ready');
+
+    process.on('SIGINT', () => {
+      console.log('Master got SIGINT');
+      process.exit(0);
+    });
+  },
+  start: (id) => {
+    const instance = app.listen(port, () => {
+      console.log('Worker %s listening on port %s', id, port);
+    });
+
+    process.on('SIGINT', () => {
+      console.log('Worker %s got SIGINT', id);
+      instance.close();
+    });
+    process.on('SIGTERM', () => {
+      console.log('Worker %s got SIGTERM', id);
+      instance.close();
+    });
+  }
 });
 
 module.exports = {
