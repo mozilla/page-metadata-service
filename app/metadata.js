@@ -59,6 +59,7 @@ function getDocumentMetadata(url, doc) {
   const urlMetadata = {
     url: parsedMetadata.url,
     original_url: url,
+    provider_name: parsedMetadata.provider,
     title: parsedMetadata.title,
     description: parsedMetadata.description,
     favicon_url: parsedMetadata.icon_url,
