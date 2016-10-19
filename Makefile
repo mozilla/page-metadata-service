@@ -10,11 +10,11 @@ lint: build
 check: build
 	docker run app:build npm test
 
-compose_build:
+compose_build: build
 	docker-compose build
 
-up: build compose_build
+up: compose_build
 	docker-compose up
 
-upd: build compose_build
+upd: compose_build
 	docker-compose up -d
