@@ -25,6 +25,7 @@ function getExampleMetadata() {
   return {
     url: 'http://www.example.com/good',
     original_url: 'http://www.example.com/good',
+    provider_name: 'example',
     title: 'An Example Page',
     description: 'An example description',
     favicon_url: 'http://www.example.com/rich-icon.png',
