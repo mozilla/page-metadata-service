@@ -1,7 +1,7 @@
 {
   "name": "page-metadata-service",
   "description": "A RESTful microservice for generating preview summaries of web pages.",
-  "version": "0.3.1",
+  "version": "1.2.0",
   "author": "Jared Kerim",
   "bugs": {
     "url": "https://github.com/mozilla/page-metadata-service/issues"
