@@ -1,4 +1,4 @@
-FROM mhart/alpine-node:6.8.0
+FROM mhart/alpine-node:6.9.1
 
 # S3 bucket in Cloud Services prod IAM
 ADD https://s3.amazonaws.com/dumb-init-dist/v1.2.0/dumb-init_1.2.0_amd64 /usr/local/bin/dumb-init
