@@ -10,7 +10,11 @@ fastimage.threshold(-1);
 function fetchUrlContent(url) {
   const startFetch = statsdClient.getTimestamp();
 
-  return fetch(url).then(res => {
+  return fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla Metadata Service https://github.com/mozilla/page-metadata-service'
+      }
+    }).then(res => {
     const endFetch = statsdClient.getTimestamp();
     statsdClient.timing('fetch_time', (endFetch - startFetch));
 
