@@ -1,3 +1,4 @@
+const blacklist = require('./blacklist');
 const domino = require('domino');
 const fastimage = require('fastimage');
 const parser = require('page-metadata-parser');
@@ -11,6 +12,20 @@ fastimage.threshold(-1);
 
 const userAgent = 'Mozilla Metadata Service https://github.com/mozilla/page-metadata-service';
 
+
+function blacklistAllowed(url) {
+  return new Promise((resolve, reject) => {
+    const domain = urlparse.parse(url).hostname;
+
+    if (blacklist.domains.has(domain)) {
+      statsdClient.increment('blacklist_deny');
+      reject('Blacklist disallows this request');
+    } else {
+      statsdClient.increment('blacklist_allow');
+      resolve(url);
+    }
+  });
+}
 
 function robotsAllowed(url) {
   return new Promise((resolve, reject) => {
@@ -49,7 +64,7 @@ function robotsAllowed(url) {
 function fetchUrlContent(url) {
   const startFetch = statsdClient.getTimestamp();
 
-  return robotsAllowed(url).then((robotsMessage) => {
+  return blacklistAllowed(url).then(robotsAllowed).then((robotsMessage) => {
     return fetch(url, {
         headers: {
           'User-Agent': userAgent
