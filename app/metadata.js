@@ -19,7 +19,8 @@ function robotsAllowed(url) {
     return fetch(robotsUrl, {
       headers: {
         'User-Agent': userAgent
-      }
+      },
+      timeout: 10 * 1000 // 10s request timeout
     }).then(res => {
       if (res.status >= 200 && res.status < 300) {
         return res;
@@ -52,7 +53,8 @@ function fetchUrlContent(url) {
     return fetch(url, {
         headers: {
           'User-Agent': userAgent
-        }
+        },
+        timeout: 10 * 1000 // 10s request timeout
       }).then(res => {
       const endFetch = statsdClient.getTimestamp();
       statsdClient.timing('fetch_time', (endFetch - startFetch));
