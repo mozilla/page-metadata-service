@@ -1,5 +1,5 @@
 module.exports = {
-  "domains": new Set([
-    "tax.service.gov.uk"
+  'domains': new Set([
+    'tax.service.gov.uk'
   ])
-}
+};
