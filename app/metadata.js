@@ -1,37 +1,77 @@
 const domino = require('domino');
 const fastimage = require('fastimage');
 const parser = require('page-metadata-parser');
+const robotsParser = require('robots-parser');
 const statsdClient = require('./statsd');
+const urlparse = require('url');
 require('isomorphic-fetch');
 
 // See https://github.com/mozilla/page-metadata-service/issues/89#issuecomment-243931889
 fastimage.threshold(-1);
 
+const userAgent = 'Mozilla Metadata Service https://github.com/mozilla/page-metadata-service';
+
+
+function robotsAllowed(url) {
+  return new Promise((resolve, reject) => {
+    const robotsUrl = urlparse.resolve(url, '/robots.txt');
+
+    return fetch(robotsUrl, {
+      headers: {
+        'User-Agent': userAgent
+      }
+    }).then(res => {
+      if (res.status >= 200 && res.status < 300) {
+        return res;
+      } else {
+        throw new Error('Unable to find robots.txt');
+      }
+    }).then(res => res.text())
+    .then(robotsText => {
+      const robots = robotsParser(robotsUrl, robotsText);
+
+      if (robots.isAllowed(url, userAgent)) {
+        statsdClient.increment('robots_allowed');
+        resolve('Robots.txt allows this request');
+      } else {
+        statsdClient.increment('robots_disallowed');
+        reject('Robots.txt disallows this request');
+      }
+    }).catch(e => {
+      statsdClient.increment('robots_not_found');
+      resolve('Unable to find robots.txt');
+    });
+  });
+}
+
+
 function fetchUrlContent(url) {
   const startFetch = statsdClient.getTimestamp();
 
-  return fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla Metadata Service https://github.com/mozilla/page-metadata-service'
+  return robotsAllowed(url).then((robotsMessage) => {
+    return fetch(url, {
+        headers: {
+          'User-Agent': userAgent
+        }
+      }).then(res => {
+      const endFetch = statsdClient.getTimestamp();
+      statsdClient.timing('fetch_time', (endFetch - startFetch));
+
+      if (res.status >= 200 && res.status < 300) {
+        statsdClient.increment('fetch_success');
+        return res;
+      } else {
+        throw new Error(`Request Failure: ${res.status} ${res.statusText}`);
       }
-    }).then(res => {
-    const endFetch = statsdClient.getTimestamp();
-    statsdClient.timing('fetch_time', (endFetch - startFetch));
+    }).then(res => res.text())
+    .catch(e => {
+      statsdClient.increment('fetch_fail');
 
-    if (res.status >= 200 && res.status < 300) {
-      statsdClient.increment('fetch_success');
-      return res;
-    } else {
-      throw new Error(`Request Failure: ${res.status} ${res.statusText}`);
-    }
-  }).then(res => res.text())
-  .catch(e => {
-    statsdClient.increment('fetch_fail');
+      const endFetch = statsdClient.getTimestamp();
+      statsdClient.timing('fetch_time', (endFetch - startFetch));
 
-    const endFetch = statsdClient.getTimestamp();
-    statsdClient.timing('fetch_time', (endFetch - startFetch));
-
-    throw e;
+      throw e;
+    });
   });
 }
 

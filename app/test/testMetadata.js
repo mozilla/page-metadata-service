@@ -39,6 +39,8 @@ describe('Metadata API Tests', function() {
   });
 
   beforeEach(function() {
+    fetchMock.mock('http://www.example.com/robots.txt', 'User-agent: * Allow: /');
+
     // restore getMetadata
     parser.getMetadata = originalGetMetadata;
 

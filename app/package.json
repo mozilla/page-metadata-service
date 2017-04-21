@@ -14,7 +14,8 @@
     "isomorphic-fetch": "^2.2.1",
     "node-statsd": "^0.1.1",
     "page-metadata-parser": "^0.5.1",
-    "raven": "^0.12.1"
+    "raven": "^0.12.1",
+    "robots-parser": "^1.0.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",
